@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perlyn – Cart</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <img src="assets/images/logo.jpg" alt="Perlyn Logo" style="height:60px;">
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="product.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="account.html">My Account</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h2>Your Shopping Cart</h2>
+  </section>
+
+  <!-- Cart Items -->
+  <div id="cart-items" style="padding:40px;"></div>
+
+  <!-- Cart Total + Checkout -->
+  <div id="cart-summary" style="text-align:center; padding:20px;">
+    <h3 id="cart-total">Total: ₹0</h3>
+    <button onclick="goToCheckout()">Proceed to Checkout</button>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 Perlyn. All rights reserved.</p>
+  </footer>
+
+  <!-- Script -->
+  <script type="module">
+    import { supabase } from './assets/js/supabase.js'
+
+    async function loadCart() {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      // ✅ Ensure only valid UUID strings remain
+      cart = cart.map(item => typeof item === "object" ? item.id : item);
+      cart = cart.filter(id => typeof id === "string" && id.includes("-")); // keep only UUIDs
+
+      if (cart.length === 0) {
+        localStorage.removeItem("cart"); // clear bad data
+        document.getElementById("cart-items").innerHTML = "<p>Your cart is empty.</p>";
+        document.getElementById("cart-summary").style.display = "none";
+        return;
+      }
+
+      // Fetch product details from Supabase
+      let { data: products, error } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', cart);
+
+      if (error) {
+        console.error("Supabase error:", error);
+        document.getElementById("cart-items").innerHTML = "<p>Error loading cart items.</p>";
+        return;
+      }
+
+      const container = document.getElementById("cart-items");
+      container.innerHTML = "";
+      let total = 0;
+
+      products.forEach(p => {
+        total += p.price;
+        container.innerHTML += `
+          <div class="product">
+            <img src="${p.image_url}" alt="${p.name}">
+            <h3>${p.name}</h3>
+            <p>₹${p.price}</p>
+            <button onclick="removeFromCart('${p.id}')">Remove</button>
+          </div>
+        `;
+      });
+
+      document.getElementById("cart-total").innerText = "Total: ₹" + total;
+    }
+
+    // Remove item from cart
+    window.removeFromCart = function(productId) {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart = cart.map(item => typeof item === "object" ? item.id : item);
+      cart = cart.filter(id => id !== productId);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      loadCart();
+    }
+
+    // Proceed to checkout
+    window.goToCheckout = function() {
+      window.location.href = "checkout.html";
+    }
+
+    loadCart();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perlyn – Products</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <img src="assets/images/logo.png" alt="Perlyn Logo" style="height:60px;">
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="product.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="account.html">My Account</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h2>Our Products</h2>
+  </section>
+
+  <!-- Product List -->
+  <div id="product-list"></div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 Perlyn. All rights reserved.</p>
+  </footer>
+
+  <!-- Script -->
+  <script type="module">
+    import { supabase } from './assets/js/supabase.js'
+
+    async function loadProducts() {
+      let { data: products, error } = await supabase.from('products').select('*');
+      if (error) console.error(error);
+
+      const container = document.getElementById('product-list');
+      products.forEach(p => {
+        container.innerHTML += `
+          <div class="product">
+            <img src="${p.image_url}" alt="${p.name}">
+            <h3>${p.name}</h3>
+            <p>₹${p.price}</p>
+            <button onclick="addToCart('${p.id}')">Add to Cart</button>
+          </div>
+        `;
+      });
+    }
+    loadProducts();
+
+    window.addToCart = function(productId) {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.push(productId);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert("Added to cart!");
+    }
+  </script>
+
+</body>
+</html>

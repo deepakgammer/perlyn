@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perlyn – Checkout</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <img src="assets/images/logo.jpg" alt="Perlyn Logo" style="height:60px;">
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="product.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="account.html">My Account</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h2>Checkout</h2>
+  </section>
+
+  <!-- Checkout Box -->
+  <div style="text-align:center; padding:40px;">
+    <h3 id="checkout-total">Total: ₹1 (Test Mode)</h3>
+    <button id="checkout-btn">Pay with UPI</button>
+    <button id="paid-btn" style="display:none;">I Paid</button>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 Perlyn. All rights reserved.</p>
+  </footer>
+
+  <!-- Script -->
+  <script type="module">
+    import { supabase } from './assets/js/supabase.js'
+
+    const upiID = "6374727774@superyes"; // Replace with your UPI ID for testing
+    let currentTotal = 1; // Default ₹1 for test
+
+    // Always show ₹1 in test mode
+    async function calculateTotal() {
+      document.getElementById("checkout-total").innerText = "Total: ₹1 (Test Mode)";
+      return 1;
+    }
+
+    // Checkout button
+    document.getElementById("checkout-btn").onclick = async () => {
+      const amount = await calculateTotal();
+
+      const upiLink = `upi://pay?pa=${upiID}&pn=Perlyn&am=${amount}&cu=INR`;
+      window.location.href = upiLink;
+
+      document.getElementById("checkout-btn").style.display = "none";
+      document.getElementById("paid-btn").style.display = "block";
+    };
+
+    // "I Paid" button
+    document.getElementById("paid-btn").onclick = async () => {
+      alert("Order placed! Pending payment verification.");
+
+      // TODO: Replace with logged-in user id from Supabase Auth
+      const userId = "dummy-user-id";
+
+      // Insert order into Supabase Orders table
+      const { data, error } = await supabase.from('orders').insert([
+        {
+          user_id: userId,
+          total_amount: currentTotal,
+          payment_status: "Pending",
+          order_status: "Processing"
+        }
+      ]);
+
+      if (error) {
+        console.error("Error saving order:", error);
+      } else {
+        console.log("Order saved:", data);
+        // Clear cart after placing order
+        localStorage.removeItem("cart");
+      }
+    };
+
+    // Initial total calculation
+    calculateTotal();
+  </script>
+
+</body>
+</html>
